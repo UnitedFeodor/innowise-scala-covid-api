@@ -10,24 +10,18 @@ import org.http4s.circe.*
 case class Country(country: String, slug: String, iso2: String)
 
 object Country:
-  given Decoder[Country] = Decoder.instance { h =>
+  given Decoder[Country] = Decoder.instance { field =>
     for {
-      country <- h.get[String]("Country")
-      slug <- h.get[String]("Slug")
-      iso2 <- h.get[String]("ISO2")
+      country <- field.get[String]("Country")
+      slug <- field.get[String]("Slug")
+      iso2 <- field.get[String]("ISO2")
     } yield Country(country, slug, iso2)
   }
-
-  given[F[_] : Concurrent]: EntityDecoder[F, Country] = jsonOf
-
-  given Encoder[Country] = Encoder.AsObject.derived[Country]
-
-  given[F[_]]: EntityEncoder[F, Country] = jsonEncoderOf
-
   given Decoder[List[Country]] = Decoder.decodeList[Country]
-
+  given[F[_] : Concurrent]: EntityDecoder[F, Country] = jsonOf
   given[F[_] : Concurrent]: EntityDecoder[F, List[Country]] = jsonOf
 
+  given Encoder[Country] = Encoder.AsObject.derived[Country]
   given Encoder[List[Country]] = Encoder.encodeList[Country]
-
+  given[F[_]]: EntityEncoder[F, Country] = jsonEncoderOf
   given[F[_]]: EntityEncoder[F, List[Country]] = jsonEncoderOf
