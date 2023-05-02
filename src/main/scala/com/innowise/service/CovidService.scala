@@ -38,17 +38,19 @@ class CovidService[F[_] : Concurrent](client: Client[F]):
     getAllCovidCasesForPeriod(country, from, to)
       .map(calculateMinMaxCases)
 
-  private def getAllCovidCasesForPeriod(country: String, from: String, to: String): F[List[GeneralCaseData]] = {
+  private def getAllCovidCasesForPeriod(country: String, from: String, to: String): F[List[GeneralCaseData]] = 
     val requestUri = CovidApiUri / "country" / country /
       "status" / "confirmed" +?
       ("from", from) +?
       ("to", to)
 
     client.expect[List[GeneralCaseData]](requestUri)
+      .map { covidCasesList =>
+        covidCasesList.filter(_.province.isEmpty)
+      }
       .adaptError { case err =>
         ServiceException(err)
       }
-  }
 
   private def calculateMinMaxCases(covidCasesList: List[GeneralCaseData]): MinMaxCaseData =
     var minNewCases = Int.MaxValue
