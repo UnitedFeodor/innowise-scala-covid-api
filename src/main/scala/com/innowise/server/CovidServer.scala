@@ -1,9 +1,7 @@
-package com.innowise
-package server
+package com.innowise.server
 
-import router.CovidRouter
-import service.CovidService
-
+import com.innowise.router.CovidRouter
+import com.innowise.service.CovidService
 import cats.*
 import cats.effect.*
 import cats.syntax.all.*
@@ -15,7 +13,8 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.headers.*
 import org.http4s.implicits.*
 import org.http4s.server.*
-import org.http4s.server.middleware.Logger
+import org.http4s.server.middleware.{CORS, Logger}
+import org.http4s.Uri
 
 import scala.concurrent.ExecutionContext.global
 
@@ -29,10 +28,18 @@ object CovidServer:
           <+> CovidRouter.getAllCountriesRoute[F](covidService)
         ).orNotFound
 
+      val corsHttpApp = CORS.policy
+        .withAllowOriginHost(Set(
+          Origin.Host(Uri.Scheme.http, Uri.RegName("localhost"), Some(4200))
+        ))
+        .withAllowCredentials(false)
+        .httpApp(httpApp)
+
+
       EmberServerBuilder.default[F]
         .withHost(ipv4"127.0.0.1")
         .withPort(port"8080")
-        .withHttpApp(httpApp)
+        .withHttpApp(corsHttpApp)
         .build
     }.useForever
 

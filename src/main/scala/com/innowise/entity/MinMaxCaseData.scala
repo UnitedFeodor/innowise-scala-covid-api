@@ -1,5 +1,4 @@
-package com.innowise
-package entity
+package com.innowise.entity
 
 import cats.effect.Concurrent
 import cats.implicits.*

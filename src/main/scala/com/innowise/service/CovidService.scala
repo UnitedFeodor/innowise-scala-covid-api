@@ -1,5 +1,4 @@
-package com.innowise
-package service
+package com.innowise.service
 
 import cats.effect.Concurrent
 import cats.implicits._
@@ -15,6 +14,8 @@ import org.http4s.client.dsl.Http4sClientDsl
 import org.http4s.implicits._
 
 import java.time.ZonedDateTime
+import java.time._
+import java.time.format.DateTimeFormatter
 
 class CovidService[F[_] : Concurrent](client: Client[F]):
   private final case class ServiceException(e: Throwable) extends RuntimeException
@@ -24,7 +25,7 @@ class CovidService[F[_] : Concurrent](client: Client[F]):
   private val dsl = new Http4sClientDsl[F] {}
   import dsl._
 
-  def getAllCountries: F[List[Country]] = 
+  def getAllCountries: F[List[Country]] =
     val requestUri = CovidApiUri / "countries"
 
     client.expect[List[Country]](requestUri)
@@ -32,7 +33,6 @@ class CovidService[F[_] : Concurrent](client: Client[F]):
         case err =>
         ServiceException(err)
       }
-  
 
   def getMinMaxCovidCaseDataForPeriod(country: String, from: String, to: String): F[MinMaxCaseData] =
     getAllCovidCasesForPeriod(country, from, to)
@@ -50,7 +50,7 @@ class CovidService[F[_] : Concurrent](client: Client[F]):
       }
   }
 
-  private def calculateMinMaxCases(covidCasesList: List[GeneralCaseData]): MinMaxCaseData = 
+  private def calculateMinMaxCases(covidCasesList: List[GeneralCaseData]): MinMaxCaseData =
     var minNewCases = Int.MaxValue
     var maxNewCases = Int.MinValue
 
@@ -58,7 +58,8 @@ class CovidService[F[_] : Concurrent](client: Client[F]):
     var maxNewCasesDate: ZonedDateTime = null
 
     for (i <- 1 until covidCasesList.length) {
-      val newCases = covidCasesList(i).cases - covidCasesList(i - 1).cases
+      val dailyCaseDifference = covidCasesList(i).cases - covidCasesList(i - 1).cases
+      val newCases = if (dailyCaseDifference >= 0) dailyCaseDifference else 0
 
       if (newCases > maxNewCases) {
         maxNewCases = newCases

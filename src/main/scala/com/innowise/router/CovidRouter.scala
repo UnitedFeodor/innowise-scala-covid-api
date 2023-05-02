@@ -1,5 +1,4 @@
-package com.innowise
-package router
+package com.innowise.router
 
 import cats.effect.{Concurrent, Sync}
 import cats.implicits.*
@@ -31,7 +30,7 @@ object CovidRouter:
     val dsl = new Http4sDsl[F] {}
     import dsl.*
     HttpRoutes.of[F] {
-      case GET -> Root / "covid" / "countries" / country :?
+      case GET -> Root / "covid" / "country" / country :?
         FromDateQueryParamMatcher(from) +& ToDateQueryParamMatcher(to) => {
           covidApiService.getMinMaxCovidCaseDataForPeriod(country, from, to).flatMap { minMaxCovidCaseList =>
             Ok(minMaxCovidCaseList)
